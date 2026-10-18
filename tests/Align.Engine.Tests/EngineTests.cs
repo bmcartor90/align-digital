@@ -32,6 +32,10 @@ namespace Align.Engine.Tests
 
         private static MoveResult Eval(Board b, params Placement[] ps) => MoveEvaluator.Evaluate(b, ps, Rules);
 
+        // No START / touch requirements, for tests that only care about scoring.
+        private static readonly GameRules Free = new GameRules { FirstPlayMustCoverStart = false, PlayMustTouchBoard = false };
+        private static MoveResult EvalFree(Board b, params Placement[] ps) => MoveEvaluator.Evaluate(b, ps, Free);
+
         private static void Put(Board b, string code, string sq) => b.Place(T(code), P(sq));
 
         // ---------- tile set ----------
@@ -142,15 +146,24 @@ namespace Align.Engine.Tests
         }
 
         [Fact]
-        public void Play_TilesInARowNeedNotBeConnected()
+        public void Play_TilesNeedNotTouchEachOther()
         {
             var b = new Board();
             Put(b, "R1D", "E6"); Put(b, "R2D", "F6"); Put(b, "R3D", "G6");
-            // Two separate tiles on row 2, far apart, touching nothing.
-            var r = Eval(b, Pl("B1O", "A2"), Pl("B2O", "K2"));
+            // H6 extends the word; K6 is in the same row but stands alone.
+            var r = Eval(b, Pl("R1O", "H6"), Pl("B2O", "K6"));
             Assert.True(r.Legal, r.Error);
-            Assert.Empty(r.Words);
-            Assert.Equal(0, r.Score);
+            Assert.Single(r.Words);
+            Assert.Equal(1 + 2 + 3 + 1, r.Score);
+        }
+
+        [Fact]
+        public void Play_AfterTheFirst_MustTouchTheBoard()
+        {
+            var b = new Board();
+            Put(b, "R1D", "E6"); Put(b, "R2D", "F6"); Put(b, "R3D", "G6");
+            var r = Eval(b, Pl("B1O", "A2"), Pl("B1O", "B2"), Pl("B1O", "C2"));
+            Assert.False(r.Legal);
         }
 
         [Fact]
@@ -178,9 +191,7 @@ namespace Align.Engine.Tests
         [Fact]
         public void Score_IsSumOfNumbers()
         {
-            var b = new Board();
-            Put(b, "R2O", "F6"); // pretend START already covered
-            var r = Eval(b, Pl("R1D", "H8"), Pl("R2D", "I8"), Pl("R3D", "J8"));
+            var r = EvalFree(new Board(), Pl("R1D", "H8"), Pl("R2D", "I8"), Pl("R3D", "J8"));
             Assert.True(r.Legal, r.Error);
             Assert.Equal(6, r.Score);
         }
@@ -229,10 +240,8 @@ namespace Align.Engine.Tests
         [Fact]
         public void Score_StarredTileIsWorthTwoRegardlessOfNumber()
         {
-            var b = new Board();
-            Put(b, "R2O", "F6");
             var heart = new Placement(T("R1H", true), P("J8")); // printed 1, scores 2
-            var r = Eval(b, Pl("R1D", "H8"), Pl("R1D", "I8"), heart);
+            var r = EvalFree(new Board(), Pl("R1D", "H8"), Pl("R1D", "I8"), heart);
             Assert.True(r.Legal, r.Error);
             Assert.Equal(4, r.Score);
         }
@@ -252,10 +261,8 @@ namespace Align.Engine.Tests
         public void Score_StarredTileOnPremiumSquare_PremiumApplies()
         {
             // Current assumption: premium multiplies the starred tile's flat 2.
-            var b = new Board();
-            Put(b, "R2O", "F6");
             var x = new Placement(T("B2X", true), P("C3")); // x4
-            var r = Eval(b, x, Pl("B1D", "D3"), Pl("B1D", "E3"));
+            var r = EvalFree(new Board(), x, Pl("B1D", "D3"), Pl("B1D", "E3"));
             Assert.True(r.Legal, r.Error);
             Assert.Equal(8 + 1 + 1, r.Score);
         }

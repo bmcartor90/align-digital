@@ -27,10 +27,9 @@ namespace Align.Engine
 
         /// <summary>
         /// After the first play, at least one placed tile must touch a tile already on the board.
-        /// GUESS: false (placed tiles don't have to connect to each other, so assumed they don't
-        /// have to connect to the board either).
+        /// The placed tiles don't have to touch each other. Ruled: true.
         /// </summary>
-        public bool PlayMustTouchBoard { get; set; } = false;
+        public bool PlayMustTouchBoard { get; set; } = true;
 
         /// <summary>Players may exchange tiles instead of playing. GUESS: true.</summary>
         public bool AllowExchange { get; set; } = true;

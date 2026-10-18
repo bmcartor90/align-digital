@@ -9,6 +9,7 @@
 - A **word** is a line of 3+ tiles that all share at least one trait (color, symbol or number). Tiles may repeat.
 - Any orthogonal line of 2 tiles is illegal. Tiles that touch must make a word of 3+.
 - A play is any number of tiles in **one row or one column**. They do not have to touch each other.
+- After the first play, a play must touch at least one tile already on the board.
 - You score **every word** your play makes or extends. Every tile in every word scores, so a tile in two words scores twice.
 - Premium squares change a tile's value only on the turn it is placed there.
 - Starred tiles score 2 every time they are scored (not their printed number).
@@ -19,7 +20,6 @@
 |---|---|---|
 | `HandSize` | 6 | Real hand size? |
 | `FirstPlayMustCoverStart` | true | Does the first play have to cover START? |
-| `PlayMustTouchBoard` | false | After the first play, must a play touch the board, or can you start a new island anywhere? |
 | `AllowExchange` | true | Can you swap tiles instead of playing? |
 | `ScorelessRoundsToEnd` | 2 | End condition (unknown). Currently: bag empty and a player plays out, or 2 full rounds of only passes/swaps. |
 | Starred tile on a premium | premium applies to the flat 2 | Does a starred tile on ×4 score 8, or always 2? |
