@@ -41,8 +41,8 @@ namespace Align.Engine
         public bool AllowExchange { get; set; } = true;
 
         /// <summary>
-        /// Board lock: the game ends after this many full rounds in which nobody placed a tile
-        /// (every turn was a pass or swap). Ruled: 1 round, i.e. everyone passes in a row.
+        /// Board lock: the game ends after this many full rounds of consecutive passes.
+        /// Swaps are not passes and break the run. Ruled: 1 round, i.e. everyone passes in a row.
         /// A player with no tiles left passes automatically.
         /// </summary>
         public int ScorelessRoundsToEnd { get; set; } = 1;

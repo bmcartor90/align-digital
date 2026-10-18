@@ -335,10 +335,12 @@ namespace Align.Engine.Tests
         }
 
         [Fact]
-        public void Game_SwapCountsAsNotPlaying_ButAPlayResetsTheCount()
+        public void Game_SwapIsNotAPass_AndBreaksTheRun()
         {
             var g = new Game(new[] { "A", "B" }, null, 3);
-            Assert.Null(g.Exchange(g.CurrentPlayer.Hand.Take(7).ToList()));
+            g.Pass();
+            Assert.Null(g.Exchange(g.CurrentPlayer.Hand.Take(2).ToList()));
+            g.Pass();
             Assert.False(g.IsOver);
             g.Pass();
             Assert.True(g.IsOver);

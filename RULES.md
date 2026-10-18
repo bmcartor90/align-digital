@@ -16,7 +16,7 @@
 - The first play must cover START.
 - Hand of 7.
 - Instead of playing, you may swap any number of tiles (bag permitting). It only costs your turn.
-- **Game end (board lock):** the game ends when every player passes or swaps in a row. A player with no tiles and an empty bag passes automatically. Highest score wins.
+- **Game end (board lock):** the game ends when every player passes in a row. A swap is not a pass and breaks the run. A player with no tiles and an empty bag passes automatically. Highest score wins.
 - Tile value = its number.
 
 ## Placeholder defaults (change in `GameRules.cs`)

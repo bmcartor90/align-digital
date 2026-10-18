@@ -134,7 +134,8 @@ namespace Align.Engine
             Shuffle(_bag);
 
             _history.Add(new TurnRecord { PlayerIndex = CurrentPlayerIndex, Kind = TurnKind.Exchange, ExchangedCount = tiles.Count });
-            Scoreless();
+            _scorelessTurns = 0; // a swap is not a pass: it breaks the run of passes
+            Advance();
             return null;
         }
 
@@ -142,10 +143,10 @@ namespace Align.Engine
         {
             if (IsOver) return;
             _history.Add(new TurnRecord { PlayerIndex = CurrentPlayerIndex, Kind = TurnKind.Pass });
-            Scoreless();
+            CountPass();
         }
 
-        private void Scoreless()
+        private void CountPass()
         {
             _scorelessTurns++;
             if (_scorelessTurns >= Rules.ScorelessRoundsToEnd * _players.Count)
