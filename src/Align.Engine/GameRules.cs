@@ -13,8 +13,11 @@ namespace Align.Engine
         /// <summary>Starred tiles, 1 of each. Ruled: included.</summary>
         public bool IncludeStarredTiles { get; set; } = true;
 
-        /// <summary>Starred tiles always score this, every time they are scored. Ruled: 2.</summary>
-        public int StarredTileValue { get; set; } = 2;
+        /// <summary>
+        /// Starred tiles are worth their number plus this, every time they are scored.
+        /// Premium squares then apply to that total. Ruled: +1.
+        /// </summary>
+        public int StarredTileBonus { get; set; } = 1;
 
         /// <summary>Minimum tiles in a word. Any 2-tile line is illegal. Ruled: 3.</summary>
         public int MinWordLength { get; set; } = 3;
@@ -22,7 +25,7 @@ namespace Align.Engine
         /// <summary>Tiles in hand. GUESS: 6.</summary>
         public int HandSize { get; set; } = 6;
 
-        /// <summary>The first play of the game must cover START. GUESS: true.</summary>
+        /// <summary>The first play of the game must cover START. Ruled: true.</summary>
         public bool FirstPlayMustCoverStart { get; set; } = true;
 
         /// <summary>

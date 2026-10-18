@@ -238,33 +238,33 @@ namespace Align.Engine.Tests
         }
 
         [Fact]
-        public void Score_StarredTileIsWorthTwoRegardlessOfNumber()
+        public void Score_StarredTileIsWorthNumberPlusOne()
         {
-            var heart = new Placement(T("R1H", true), P("J8")); // printed 1, scores 2
+            var heart = new Placement(T("R1H", true), P("J8")); // printed 1, scores 1+1
             var r = EvalFree(new Board(), Pl("R1D", "H8"), Pl("R1D", "I8"), heart);
             Assert.True(r.Legal, r.Error);
             Assert.Equal(4, r.Score);
         }
 
         [Fact]
-        public void Score_StarredTileStillScoresTwoWhenScoredAgainLater()
+        public void Score_StarredTileKeepsItsBonusWhenScoredAgainLater()
         {
             var b = new Board();
             b.Place(T("K3D", true), P("H8"));
             Put(b, "R1D", "I8"); Put(b, "R1D", "J8");
             var r = Eval(b, Pl("R1D", "K8"));
             Assert.True(r.Legal, r.Error);
-            Assert.Equal(2 + 1 + 1 + 1, r.Score);
+            Assert.Equal((3 + 1) + 1 + 1 + 1, r.Score);
         }
 
         [Fact]
         public void Score_StarredTileOnPremiumSquare_PremiumApplies()
         {
-            // Current assumption: premium multiplies the starred tile's flat 2.
+            // Ruled: the +1 is added first, then the premium multiplies it.
             var x = new Placement(T("B2X", true), P("C3")); // x4
             var r = EvalFree(new Board(), x, Pl("B1D", "D3"), Pl("B1D", "E3"));
             Assert.True(r.Legal, r.Error);
-            Assert.Equal(8 + 1 + 1, r.Score);
+            Assert.Equal((2 + 1) * 4 + 1 + 1, r.Score);
         }
 
         // ---------- game flow ----------

@@ -213,7 +213,7 @@ namespace Align.ConsoleClient
         {
             Console.WriteLine();
             Console.WriteLine("Squares are column letter + row number (A1 top-left, F6 = START).");
-            Console.WriteLine("Tiles are color+number+symbol: R2D = Red 2 Diamond. * = starred tile (always 2 pts).");
+            Console.WriteLine("Tiles are color+number+symbol: R2D = Red 2 Diamond. * = starred tile (+1 pt).");
             Console.WriteLine("  1F6 2G6 3H6     play hand slots 1,2,3 on F6,G6,H6 (or: play 1F6 ...)");
             Console.WriteLine("  ? 1F6 2G6 3H6   preview legality and score without playing");
             Console.WriteLine("  swap 1 4        exchange hand slots 1 and 4");

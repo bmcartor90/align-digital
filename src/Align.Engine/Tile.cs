@@ -16,7 +16,7 @@ namespace Align.Engine
         public TileSymbol Symbol { get; }
         public int Number { get; }
 
-        /// <summary>Starred tiles carry one trait value no other tile has, and score a flat value.</summary>
+        /// <summary>Starred tiles carry one trait value no other tile has, and score +1.</summary>
         public bool Starred { get; }
 
         public Tile(int id, TileColor color, TileSymbol symbol, int number, bool starred = false)
@@ -28,8 +28,8 @@ namespace Align.Engine
             Starred = starred;
         }
 
-        /// <summary>Points before any premium square: printed number, or the flat starred value.</summary>
-        public int BaseValue(GameRules rules) => Starred ? rules.StarredTileValue : Number;
+        /// <summary>Points before any premium square: printed number, +1 if starred.</summary>
+        public int BaseValue(GameRules rules) => Number + (Starred ? rules.StarredTileBonus : 0);
 
         /// <summary>Short code, e.g. R2D = Red 2 Diamond, K3D = Black 3 Diamond.</summary>
         public string Code => $"{ColorLetter(Color)}{Number}{SymbolLetter(Symbol)}";

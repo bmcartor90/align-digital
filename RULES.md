@@ -12,15 +12,14 @@
 - After the first play, a play must touch at least one tile already on the board.
 - You score **every word** your play makes or extends. Every tile in every word scores, so a tile in two words scores twice.
 - Premium squares change a tile's value only on the turn it is placed there.
-- Starred tiles score 2 every time they are scored (not their printed number).
+- Starred tiles are worth their number +1, every time they are scored. A premium square applies after the +1 (B2X on ×4 = 12).
+- The first play must cover START.
 - Tile value = its number.
 
 ## Placeholder defaults (change in `GameRules.cs`)
 | Setting | Default | Open question |
 |---|---|---|
 | `HandSize` | 6 | Real hand size? |
-| `FirstPlayMustCoverStart` | true | Does the first play have to cover START? |
 | `AllowExchange` | true | Can you swap tiles instead of playing? |
 | `ScorelessRoundsToEnd` | 2 | End condition (unknown). Currently: bag empty and a player plays out, or 2 full rounds of only passes/swaps. |
-| Starred tile on a premium | premium applies to the flat 2 | Does a starred tile on ×4 score 8, or always 2? |
 | +2 / ×2 / ×4 | applies to the tile's value | Confirm these are tile premiums, not word premiums. |
