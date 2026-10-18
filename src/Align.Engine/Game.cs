@@ -107,10 +107,7 @@ namespace Align.Engine
             });
             _scorelessTurns = 0;
 
-            if (player.Hand.Count == 0 && _bag.Count == 0)
-                End($"{player.Name} played out their last tile.");
-            else
-                Advance();
+            Advance();
             return result;
         }
 
@@ -152,12 +149,17 @@ namespace Align.Engine
         {
             _scorelessTurns++;
             if (_scorelessTurns >= Rules.ScorelessRoundsToEnd * _players.Count)
-                End($"{Rules.ScorelessRoundsToEnd} full rounds with no plays.");
+                End("Board locked: every player passed in a row.");
             else
                 Advance();
         }
 
-        private void Advance() => CurrentPlayerIndex = (CurrentPlayerIndex + 1) % _players.Count;
+        private void Advance()
+        {
+            CurrentPlayerIndex = (CurrentPlayerIndex + 1) % _players.Count;
+            // Out of tiles with an empty bag: nothing to do but pass.
+            if (CurrentPlayer.Hand.Count == 0 && _bag.Count == 0) Pass();
+        }
 
         private void End(string reason)
         {

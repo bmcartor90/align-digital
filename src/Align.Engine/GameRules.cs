@@ -22,8 +22,8 @@ namespace Align.Engine
         /// <summary>Minimum tiles in a word. Any 2-tile line is illegal. Ruled: 3.</summary>
         public int MinWordLength { get; set; } = 3;
 
-        /// <summary>Tiles in hand. GUESS: 6.</summary>
-        public int HandSize { get; set; } = 6;
+        /// <summary>Tiles in hand. Ruled: 7.</summary>
+        public int HandSize { get; set; } = 7;
 
         /// <summary>The first play of the game must cover START. Ruled: true.</summary>
         public bool FirstPlayMustCoverStart { get; set; } = true;
@@ -34,14 +34,17 @@ namespace Align.Engine
         /// </summary>
         public bool PlayMustTouchBoard { get; set; } = true;
 
-        /// <summary>Players may exchange tiles instead of playing. GUESS: true.</summary>
+        /// <summary>
+        /// Players may swap any number of tiles instead of playing (bag permitting).
+        /// It costs only the turn. Ruled: true.
+        /// </summary>
         public bool AllowExchange { get; set; } = true;
 
         /// <summary>
-        /// Placeholder end condition until the real one is recalled: the game ends when the bag
-        /// is empty and a player empties their hand, or after this many full rounds in which
-        /// every turn was a pass or exchange.
+        /// Board lock: the game ends after this many full rounds in which nobody placed a tile
+        /// (every turn was a pass or swap). Ruled: 1 round, i.e. everyone passes in a row.
+        /// A player with no tiles left passes automatically.
         /// </summary>
-        public int ScorelessRoundsToEnd { get; set; } = 2;
+        public int ScorelessRoundsToEnd { get; set; } = 1;
     }
 }

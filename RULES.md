@@ -14,12 +14,12 @@
 - Premium squares change a tile's value only on the turn it is placed there.
 - Starred tiles are worth their number +1, every time they are scored. A premium square applies after the +1 (B2X on ×4 = 12).
 - The first play must cover START.
+- Hand of 7.
+- Instead of playing, you may swap any number of tiles (bag permitting). It only costs your turn.
+- **Game end (board lock):** the game ends when every player passes or swaps in a row. A player with no tiles and an empty bag passes automatically. Highest score wins.
 - Tile value = its number.
 
 ## Placeholder defaults (change in `GameRules.cs`)
 | Setting | Default | Open question |
 |---|---|---|
-| `HandSize` | 6 | Real hand size? |
-| `AllowExchange` | true | Can you swap tiles instead of playing? |
-| `ScorelessRoundsToEnd` | 2 | End condition (unknown). Currently: bag empty and a player plays out, or 2 full rounds of only passes/swaps. |
 | +2 / ×2 / ×4 | applies to the tile's value | Confirm these are tile premiums, not word premiums. |

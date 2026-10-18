@@ -277,7 +277,7 @@ namespace Align.Engine.Tests
             var bag = Bag("R1D", "R2D", "R3D", "B1O", "B2O", "B3O",
                           "G1S", "G2S", "G3S", "G1D", "G2D", "G3D",
                           "R1O", "R2O", "R3O");
-            var g = Game.WithDrawOrder(new[] { "A", "B" }, new GameRules(), bag);
+            var g = Game.WithDrawOrder(new[] { "A", "B" }, new GameRules { HandSize = 6 }, bag);
             Assert.Equal(6, g.Players[0].Hand.Count);
             Assert.Equal(6, g.Players[1].Hand.Count);
             Assert.Equal(3, g.BagCount);
@@ -309,7 +309,7 @@ namespace Align.Engine.Tests
             var r = g.Play(new[] { new Placement(h[0], P("A1")) }); // misses START
             Assert.False(r.Legal);
             Assert.True(g.Board.IsEmpty);
-            Assert.Equal(6, h.Count);
+            Assert.Equal(7, h.Count);
         }
 
         [Fact]
@@ -319,18 +319,50 @@ namespace Align.Engine.Tests
             var bagBefore = g.BagCount;
             var old = g.CurrentPlayer.Hand.Take(2).ToList();
             Assert.Null(g.Exchange(old));
-            Assert.Equal(6, g.Players[0].Hand.Count);
+            Assert.Equal(7, g.Players[0].Hand.Count);
             Assert.Equal(bagBefore, g.BagCount);
             Assert.Equal(1, g.CurrentPlayerIndex);
         }
 
         [Fact]
-        public void Game_EndsAfterScorelessRounds()
+        public void Game_EndsWhenEveryonePassesInARow()
         {
-            var g = new Game(new[] { "A", "B" }, null, 3);
-            for (int i = 0; i < 3; i++) g.Pass();
+            var g = new Game(new[] { "A", "B", "C" }, null, 3);
+            g.Pass(); g.Pass();
             Assert.False(g.IsOver);
             g.Pass();
+            Assert.True(g.IsOver);
+        }
+
+        [Fact]
+        public void Game_SwapCountsAsNotPlaying_ButAPlayResetsTheCount()
+        {
+            var g = new Game(new[] { "A", "B" }, null, 3);
+            Assert.Null(g.Exchange(g.CurrentPlayer.Hand.Take(7).ToList()));
+            Assert.False(g.IsOver);
+            g.Pass();
+            Assert.True(g.IsOver);
+        }
+
+        [Fact]
+        public void Game_SwapAnyNumber_UpToWholeHand()
+        {
+            var g = new Game(new[] { "A", "B" }, null, 5);
+            Assert.Null(g.Exchange(g.CurrentPlayer.Hand.ToList()));
+            Assert.Equal(7, g.Players[0].Hand.Count);
+        }
+
+        [Fact]
+        public void Game_PlayerOutOfTilesWithEmptyBag_PassesAutomatically()
+        {
+            // A gets 3 tiles, B gets 3 tiles, bag then empty.
+            var rules = new GameRules { HandSize = 3 };
+            var bag = Bag("R1D", "R2D", "R3D", "B1O", "B2O", "B3O");
+            var g = Game.WithDrawOrder(new[] { "A", "B" }, rules, bag);
+            var h = g.CurrentPlayer.Hand;
+            Assert.True(g.Play(new[] { new Placement(h[0], P("E6")), new Placement(h[1], P("F6")), new Placement(h[2], P("G6")) }).Legal);
+            Assert.Equal(1, g.CurrentPlayerIndex);
+            g.Pass(); // B passes, A auto-passes (no tiles) -> everyone passed
             Assert.True(g.IsOver);
         }
 
