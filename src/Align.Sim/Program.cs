@@ -119,6 +119,7 @@ namespace Align.Sim
         private readonly List<double> _winnerScores = new List<double>();
         private readonly List<double> _margins = new List<double>();
         private readonly int[] _seatWins;
+        private double[] _seatScore, _seatPlays, _seatFirst;
         private readonly Dictionary<string, double> _botWins = new Dictionary<string, double>();
         private readonly Dictionary<string, int> _botGames = new Dictionary<string, int>();
         private readonly Dictionary<string, List<double>> _botScores = new Dictionary<string, List<double>>();
@@ -131,7 +132,11 @@ namespace Align.Sim
         private double _ms; private int _decisions; private double _maxMs;
         private int _crossPlays;
 
-        public Stats(int players) { _players = players; _seatWins = new int[players]; }
+        public Stats(int players)
+        {
+            _players = players; _seatWins = new int[players];
+            _seatScore = new double[players]; _seatPlays = new double[players]; _seatFirst = new double[players];
+        }
 
         public void Add(Game game, List<TurnLog> log, List<string> botNames)
         {
@@ -155,6 +160,10 @@ namespace Align.Sim
 
             for (int i = 0; i < _players; i++)
             {
+                _seatScore[i] += scores[i];
+                _seatPlays[i] += log.Count(t => t.Player == i && t.Kind == DecisionKind.Play);
+                var first = log.FirstOrDefault(t => t.Player == i);
+                if (first != null) _seatFirst[i] += first.Score;
                 var n = botNames[i];
                 if (!_botGames.ContainsKey(n)) { _botGames[n] = 0; _botWins[n] = 0; _botScores[n] = new List<double>(); }
                 _botGames[n]++;
@@ -231,6 +240,9 @@ namespace Align.Sim
             sb.AppendLine($"| Winning margin | {Range(_margins)} |");
             sb.AppendLine($"| Ties for first | {Pct(_ties, done)} |");
             sb.AppendLine($"| Wins by seat | {string.Join(", ", _seatWins.Select((w, i) => $"P{i + 1} {Pct(w, done)}"))} |");
+            sb.AppendLine($"| Avg score by seat | {string.Join(", ", _seatScore.Select((v, i) => $"P{i + 1} {v / done:F1}"))} |");
+            sb.AppendLine($"| Avg plays by seat | {string.Join(", ", _seatPlays.Select((v, i) => $"P{i + 1} {v / done:F2}"))} |");
+            sb.AppendLine($"| Avg first-turn score by seat | {string.Join(", ", _seatFirst.Select((v, i) => $"P{i + 1} {v / done:F1}"))} |");
             if (_botGames.Count > 1)
                 sb.AppendLine($"| Wins by bot | {string.Join(", ", _botGames.Keys.Select(k => $"{k} {Pct(_botWins[k], done)} (avg {_botScores[k].Average():F1} pts)"))} |");
             sb.AppendLine($"| Turn mix: play / swap / pass | {Pct(_plays, turns)} / {Pct(_swaps, turns)} / {Pct(_passes, turns)} |");
