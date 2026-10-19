@@ -11,7 +11,7 @@
 - A play is any number of tiles in **one row or one column**. They do not have to touch each other.
 - After the first play, a play must touch at least one tile already on the board.
 - You score **every word** your play makes or extends. Every tile in every word scores, so a tile in two words scores twice.
-- Premium squares change a tile's value only on the turn it is placed there.
+- All premiums (+2, ×2, ×4) are **tile** premiums: they change that tile's value, in every word it is part of, only on the turn it is placed there. There are no word premiums.
 - Starred tiles are worth their number +1, every time they are scored. A premium square applies after the +1 (B2X on ×4 = 12).
 - The first play must cover START.
 - Hand of 7.
@@ -19,7 +19,5 @@
 - **Game end (board lock):** the game ends when every player passes in a row. A swap is not a pass and breaks the run. A player with no tiles and an empty bag passes automatically. Highest score wins.
 - Tile value = its number.
 
-## Placeholder defaults (change in `GameRules.cs`)
-| Setting | Default | Open question |
-|---|---|---|
-| +2 / ×2 / ×4 | applies to the tile's value | Confirm these are tile premiums, not word premiums. |
+## Open
+- None. All rules currently known are implemented.
