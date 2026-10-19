@@ -82,6 +82,7 @@ namespace Align.Engine.Tests
         [InlineData(15, 16)]
         public void MoveFinder_MatchesBruteForce(int seed, int turns)
         {
+            MoveFinder.Verify = true; // also checks every found play's score against MoveEvaluator
             var g = MidGame(seed, turns);
             var rules = g.Rules;
             var hand = g.CurrentPlayer.Hand.Take(4).ToList();

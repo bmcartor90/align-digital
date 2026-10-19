@@ -6,14 +6,22 @@ namespace Align.Engine
 {
     public sealed class CandidateMove
     {
-        public List<Placement> Placements { get; }
-        public MoveResult Result { get; }
-        public int Score => Result.Score;
+        private readonly Board _board;
+        private readonly GameRules _rules;
+        private MoveResult _result;
 
-        internal CandidateMove(List<Placement> placements, MoveResult result)
+        public List<Placement> Placements { get; }
+        public int Score { get; }
+
+        /// <summary>Full word breakdown, computed on first use. Only valid while the board is unchanged.</summary>
+        public MoveResult Result => _result ?? (_result = MoveEvaluator.Evaluate(_board, Placements, _rules));
+
+        internal CandidateMove(List<Placement> placements, int score, Board board, GameRules rules)
         {
             Placements = placements;
-            Result = result;
+            Score = score;
+            _board = board;
+            _rules = rules;
         }
 
         public override string ToString() => $"{string.Join(" ", Placements)} = {Score}";
@@ -31,6 +39,9 @@ namespace Align.Engine
     /// </summary>
     public static class MoveFinder
     {
+        /// <summary>Re-check every found play with MoveEvaluator (slow; tests turn this on).</summary>
+        public static bool Verify { get; set; }
+
         public static List<CandidateMove> FindAll(Board board, IReadOnlyList<Tile> hand, GameRules rules, int maxMoves = 100000)
         {
             var results = new List<CandidateMove>();
@@ -70,6 +81,8 @@ namespace Align.Engine
 
             private Pos[] _cells;
             private byte[,] _cross;
+            private int[,] _crossScore;   // points from the cross word if kind k goes on square i
+            private int[,] _mainValue;    // that tile's value in the main-line word (premium applied)
             private bool[] _touch;
             private int[] _assign;
             private bool _skipSingles; // the column pass skips 1-tile plays (the row pass already found them)
@@ -116,6 +129,8 @@ namespace Align.Engine
                 // Cross words run perpendicular to the line.
                 int pr = orient == 0 ? 1 : 0, pc = orient == 0 ? 0 : 1;
                 _cross = new byte[n, _kinds.Count];
+                _crossScore = new int[n, _kinds.Count];
+                _mainValue = new int[n, _kinds.Count];
                 _touch = new bool[n];
                 bool anyOpen = false;
                 for (int i = 0; i < n; i++)
@@ -130,8 +145,12 @@ namespace Align.Engine
                     for (var q = cell.Offset(pr, pc); q.InBounds && _board[q] != null; q = q.Offset(pr, pc)) after.Add(_board[q]);
                     int len = before.Count + after.Count + 1;
 
+                    var premium = Board.PremiumAt(cell);
+                    int boardPart = before.Sum(o => o.BaseValue(_rules)) + after.Sum(o => o.BaseValue(_rules));
                     for (int k = 0; k < _kinds.Count; k++)
                     {
+                        int value = MoveEvaluator.ApplyPremium(_kinds[k].Sample.BaseValue(_rules), premium);
+                        _mainValue[i, k] = value;
                         byte st;
                         if (len == 1) st = Alone;
                         else if (len < _rules.MinWordLength) st = Illegal;
@@ -142,6 +161,7 @@ namespace Align.Engine
                             foreach (var o in before) mask &= Match(t, o);
                             foreach (var o in after) mask &= Match(t, o);
                             st = mask != 0 ? InWord : Illegal;
+                            if (st == InWord) _crossScore[i, k] = boardPart + value;
                         }
                         _cross[i, k] = st;
                         if (st != Illegal) anyOpen = true;
@@ -151,8 +171,11 @@ namespace Align.Engine
 
                 _assign = new int[n];
                 for (int i = 0; i < n; i++) _assign[i] = -1;
-                return Dfs(0, 0, null, 0, false, false, 0, false, false);
+                return Dfs(0, 0, null, 0, 0, false, false, 0, 0, false, false);
             }
+
+            private int Closed(int runLen, int runScore, bool runHasNew) =>
+                runHasNew && runLen >= _rules.MinWordLength ? runScore : 0;
 
             private bool CloseOk(int runLen, int runMask, bool runHasNew, bool singleInWord)
             {
@@ -161,8 +184,8 @@ namespace Align.Engine
                 return runLen >= _rules.MinWordLength && runMask != 0;
             }
 
-            private bool Dfs(int k, int runLen, Tile runFirst, int runMask, bool runHasNew, bool singleInWord,
-                             int placed, bool touches, bool coversStart)
+            private bool Dfs(int k, int runLen, Tile runFirst, int runMask, int runScore, bool runHasNew, bool singleInWord,
+                             int placed, int score, bool touches, bool coversStart)
             {
                 if (k == _cells.Length)
                 {
@@ -171,7 +194,7 @@ namespace Align.Engine
                     if (_skipSingles && placed == 1) return true;
                     if (_boardEmpty ? (_rules.FirstPlayMustCoverStart && !coversStart)
                                     : (_rules.PlayMustTouchBoard && !touches)) return true;
-                    return Emit();
+                    return Emit(score + Closed(runLen, runScore, runHasNew));
                 }
 
                 var cell = _cells[k];
@@ -180,13 +203,13 @@ namespace Align.Engine
                 {
                     int mask = runLen == 0 ? 7 : runMask & Match(runFirst, boardTile);
                     if (runLen >= 1 && mask == 0) return true;
-                    return Dfs(k + 1, runLen + 1, runLen == 0 ? boardTile : runFirst, mask, runHasNew, singleInWord,
-                               placed, touches, coversStart);
+                    return Dfs(k + 1, runLen + 1, runLen == 0 ? boardTile : runFirst, mask, runScore + boardTile.BaseValue(_rules),
+                               runHasNew, singleInWord, placed, score, touches, coversStart);
                 }
 
                 // Leave this square empty: the current run ends here.
                 if (CloseOk(runLen, runMask, runHasNew, singleInWord))
-                    if (!Dfs(k + 1, 0, null, 0, false, false, placed, touches, coversStart)) return false;
+                    if (!Dfs(k + 1, 0, null, 0, 0, false, false, placed, score + Closed(runLen, runScore, runHasNew), touches, coversStart)) return false;
 
                 // Or place one of each kind of tile still in hand.
                 for (int i = 0; i < _kinds.Count; i++)
@@ -202,8 +225,8 @@ namespace Align.Engine
 
                     kind.Used++;
                     _assign[k] = i;
-                    bool cont = Dfs(k + 1, runLen + 1, runLen == 0 ? t : runFirst, mask, true,
-                                    runLen == 0 && st == InWord, placed + 1, touches || _touch[k],
+                    bool cont = Dfs(k + 1, runLen + 1, runLen == 0 ? t : runFirst, mask, runScore + _mainValue[k, i], true,
+                                    runLen == 0 && st == InWord, placed + 1, score + _crossScore[k, i], touches || _touch[k],
                                     coversStart || cell == Board.Start);
                     _assign[k] = -1;
                     kind.Used--;
@@ -212,7 +235,7 @@ namespace Align.Engine
                 return true;
             }
 
-            private bool Emit()
+            private bool Emit(int score)
             {
                 var placements = new List<Placement>();
                 var taken = new int[_kinds.Count];
@@ -222,11 +245,14 @@ namespace Align.Engine
                     if (k < 0) continue;
                     placements.Add(new Placement(_kinds[k].Tiles[taken[k]++], _cells[i]));
                 }
-                var result = MoveEvaluator.Evaluate(_board, placements, _rules);
-                if (!result.Legal)
-                    throw new InvalidOperationException(
-                        $"MoveFinder produced an illegal play {string.Join(" ", placements)}: {result.Error}");
-                return _emit(new CandidateMove(placements, result));
+                if (Verify)
+                {
+                    var result = MoveEvaluator.Evaluate(_board, placements, _rules);
+                    if (!result.Legal || result.Score != score)
+                        throw new InvalidOperationException(
+                            $"MoveFinder mismatch on {string.Join(" ", placements)}: legal={result.Legal} {result.Error} score {score} vs {result.Score}");
+                }
+                return _emit(new CandidateMove(placements, score, _board, _rules));
             }
 
             private static IEnumerable<Pos> Neighbors(Pos p)
