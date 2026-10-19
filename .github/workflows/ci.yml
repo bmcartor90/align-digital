@@ -8,6 +8,9 @@ on:
       games:
         description: Games per simulation config
         default: "200"
+      sim_args:
+        description: Extra simulator arguments, e.g. --copies 4
+        default: ""
 
 jobs:
   build-test:
@@ -21,7 +24,7 @@ jobs:
       - run: dotnet test Align.sln -c Release --no-build --logger "console;verbosity=normal"
 
       - name: Simulate bot games
-        run: dotnet run --project src/Align.Sim -c Release --no-build -- --games ${{ github.event.inputs.games || '200' }} --out sim-report.md
+        run: dotnet run --project src/Align.Sim -c Release --no-build -- --games ${{ github.event.inputs.games || '200' }} --out sim-report.md ${{ github.event.inputs.sim_args }}
 
       - name: Publish report
         if: always()

@@ -17,11 +17,14 @@ namespace Align.Sim
         public static int Main(string[] args)
         {
             int games = 200;
+            var rules = new GameRules();
             string outPath = "sim-report.md";
             for (int i = 0; i < args.Length - 1; i++)
             {
                 if (args[i] == "--games") games = int.Parse(args[i + 1]);
                 if (args[i] == "--out") outPath = args[i + 1];
+                if (args[i] == "--copies") rules.CopiesOfEachBaseTile = int.Parse(args[i + 1]);
+                if (args[i] == "--hand") rules.HandSize = int.Parse(args[i + 1]);
             }
 
             var configs = new List<(string name, Func<int, IBot>[] seats, bool rotate)>
@@ -36,7 +39,8 @@ namespace Align.Sim
             var sb = new StringBuilder();
             sb.AppendLine("# Align simulation report");
             sb.AppendLine();
-            sb.AppendLine($"{games} games per configuration. Rules: hand {new GameRules().HandSize}, tile premiums, starred +1, board-lock end.");
+            int tileCount = TileSet.Create(rules).Count;
+            sb.AppendLine($"{games} games per configuration. Rules: hand {rules.HandSize}, {rules.CopiesOfEachBaseTile} copies of each base tile ({tileCount} tiles), tile premiums, starred +1, board-lock end.");
             sb.AppendLine("Bots swap their whole hand when they have no legal play (max 2 swaps in a row), then pass.");
             sb.AppendLine();
 
@@ -54,9 +58,9 @@ namespace Align.Sim
                     bool flipped = cfg.rotate && g % 2 == 1;
                     if (flipped) factories.Reverse();
                     var bots = factories.Select((f, i) => f(seed * 10 + i)).ToList();
-                    var game = new Game(names, new GameRules(), seed);
+                    var game = new Game(names, rules, seed);
                     var log = BotRunner.PlayOut(game, bots);
-                    st.Add(game, log, bots.Select(b => b.Name).ToList());
+                    st.Add(game, log, bots.Select(b => b.Name).ToList(), tileCount);
                     if (sampleBoard == null) sampleBoard = RenderBoard(game);
                 }
                 st.Write(sb, cfg.name);
@@ -138,8 +142,11 @@ namespace Align.Sim
             _seatScore = new double[players]; _seatPlays = new double[players]; _seatFirst = new double[players];
         }
 
-        public void Add(Game game, List<TurnLog> log, List<string> botNames)
+        private int _tileCount;
+
+        public void Add(Game game, List<TurnLog> log, List<string> botNames, int tileCount)
         {
+            _tileCount = tileCount;
             _games++;
             if (!game.IsOver) { _aborted++; return; }
 
@@ -231,7 +238,7 @@ namespace Align.Sim
             sb.AppendLine($"| Games finished / aborted (hit turn cap) | {done} / {_aborted} |");
             sb.AppendLine($"| Turns per game | {Range(_turns)} |");
             sb.AppendLine($"| Rounds per game | {Range(_rounds)} |");
-            sb.AppendLine($"| Tiles on board at end (of 121 squares, 87 tiles) | {Range(_boardTiles)} |");
+            sb.AppendLine($"| Tiles on board at end (of 121 squares, {_tileCount} tiles) | {Range(_boardTiles)} |");
             sb.AppendLine($"| Tiles never played (bag + hands) | {Range(_tilesLeft)} |");
             sb.AppendLine($"| Bag at end | {Range(_bagLeft)} |");
             sb.AppendLine($"| End was a true lock (no one could play) | {Pct(_lockedTrue, done)} |");
