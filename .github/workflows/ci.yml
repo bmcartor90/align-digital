@@ -3,6 +3,11 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      games:
+        description: Games per simulation config
+        default: "200"
 
 jobs:
   build-test:
@@ -14,3 +19,28 @@ jobs:
           dotnet-version: 8.0.x
       - run: dotnet build Align.sln -c Release
       - run: dotnet test Align.sln -c Release --no-build --logger "console;verbosity=normal"
+
+      - name: Simulate bot games
+        run: dotnet run --project src/Align.Sim -c Release --no-build -- --games ${{ github.event.inputs.games || '200' }} --out sim-report.md
+
+      - name: Publish report
+        if: always()
+        run: |
+          [ -f sim-report.md ] || exit 0
+          cat sim-report.md >> "$GITHUB_STEP_SUMMARY"
+          # One annotation per section so the report can be read through the API.
+          python3 - <<'PY'
+          text = open("sim-report.md").read()
+          parts = text.split("\n## ")
+          for i, part in enumerate(parts):
+              body = part if i == 0 else "## " + part
+              body = body.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+              print(f"::notice title=Sim {i}::{body}")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sim-report
+          path: sim-report.md
+          if-no-files-found: ignore

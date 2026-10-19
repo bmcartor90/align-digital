@@ -21,10 +21,16 @@ namespace Align.ConsoleClient
             Console.WriteLine("ALIGN");
             int count = AskInt("Players (2-4): ", 2, 4);
             var names = new List<string>();
+            var bots = new Dictionary<int, IBot>();
             for (int i = 1; i <= count; i++)
             {
-                Console.Write($"Name for player {i} [Player {i}]: ");
+                Console.Write($"Name for player {i} (type cpu for a computer player) [Player {i}]: ");
                 var n = Console.ReadLine()?.Trim();
+                if (string.Equals(n, "cpu", StringComparison.OrdinalIgnoreCase))
+                {
+                    bots[i - 1] = new GreedyBot(seed ?? Environment.TickCount + i);
+                    n = $"CPU {i}";
+                }
                 names.Add(string.IsNullOrEmpty(n) ? $"Player {i}" : n);
             }
 
@@ -33,8 +39,16 @@ namespace Align.ConsoleClient
 
             while (!game.IsOver)
             {
+                if (bots.TryGetValue(game.CurrentPlayerIndex, out var bot))
+                {
+                    RunBotTurn(game, bot);
+                    continue;
+                }
+
                 PrintBoard(game);
                 PrintStatus(game);
+                if (!game.CurrentPlayerHasLegalPlay())
+                    Warn("You have no legal play. Swap or pass.");
                 Console.Write($"{game.CurrentPlayer.Name}> ");
                 var line = Console.ReadLine();
                 if (line == null) return;
@@ -97,6 +111,28 @@ namespace Align.ConsoleClient
             foreach (var p in game.Players.OrderByDescending(p => p.Score))
                 Console.WriteLine($"  {p.Name}: {p.Score}");
             Console.WriteLine($"Winner: {string.Join(" & ", game.Leaders().Select(p => p.Name))}");
+        }
+
+        private static void RunBotTurn(Game game, IBot bot)
+        {
+            var name = game.CurrentPlayer.Name;
+            var d = bot.Decide(game);
+            switch (d.Kind)
+            {
+                case DecisionKind.Play:
+                    var r = game.Play(d.Placements);
+                    Console.WriteLine($"{name} plays {string.Join(" ", d.Placements.Select(p => $"{p.Tile.Code}@{p.Pos}"))}");
+                    PrintWords(r);
+                    break;
+                case DecisionKind.Swap:
+                    game.Exchange(d.SwapTiles);
+                    Console.WriteLine($"{name} has no play and swaps {d.SwapTiles.Count} tiles.");
+                    break;
+                default:
+                    game.Pass();
+                    Console.WriteLine($"{name} passes.");
+                    break;
+            }
         }
 
         private static List<Placement> ParsePlacements(Game game, string[] tokens, out string error)

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Align.Console", "src\Align.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Align.Engine.Tests", "tests\Align.Engine.Tests\Align.Engine.Tests.csproj", "{30AD240B-9055-4B58-A913-03039072A65E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Align.Sim", "src\Align.Sim\Align.Sim.csproj", "{58EF47ED-7D8C-4DEF-A168-74370A371974}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,5 +29,9 @@ Global
 		{30AD240B-9055-4B58-A913-03039072A65E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30AD240B-9055-4B58-A913-03039072A65E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30AD240B-9055-4B58-A913-03039072A65E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58EF47ED-7D8C-4DEF-A168-74370A371974}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58EF47ED-7D8C-4DEF-A168-74370A371974}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58EF47ED-7D8C-4DEF-A168-74370A371974}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58EF47ED-7D8C-4DEF-A168-74370A371974}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -73,6 +73,12 @@ namespace Align.Engine
             foreach (var p in _players) Refill(p);
         }
 
+        /// <summary>True if the current player has at least one legal play (true board-lock check).</summary>
+        public bool CurrentPlayerHasLegalPlay() => !IsOver && MoveFinder.AnyLegalPlay(Board, CurrentPlayer.Hand, Rules);
+
+        /// <summary>True if no player can play: nobody's hand fits anywhere on the board.</summary>
+        public bool IsBoardLockedForEveryone() => _players.All(p => !MoveFinder.AnyLegalPlay(Board, p.Hand, Rules));
+
         /// <summary>Check and score a play for the current player without committing it.</summary>
         public MoveResult Preview(IReadOnlyList<Placement> placements)
         {
